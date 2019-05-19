@@ -9,7 +9,7 @@ private:
 public:
 	History(size_t max): max_gen{max}{};
 	//Guarda uma geração no vector para geração posteriores
-	void add(list gen);
+	void add(list &gen);
 	//Busca pela geração no vector
 	bool find(list &gen);
 };
