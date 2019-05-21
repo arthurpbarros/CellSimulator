@@ -100,7 +100,7 @@ size_t Life::looking_neighbors( size_t x, size_t y ) const
     size_t nCol = Life::nCol;
     size_t count = 0;
     // Verifica se um par de coordenadas está dentro dos limites da grade.
-    std::function< bool (int,int) > inside = [ nLin, nCol ]( int x, int y )->bool
+    std::function< bool (size_t,size_t) > inside = [ nLin, nCol ]( size_t x, size_t y )->bool
     { return ( x >= 0 ) && ( x < nLin ) && ( y >= 0 ) && ( y < nCol ); };
 
     inside( x - 1, y - 1 ) ? ( grade[ x - 1 ][ y - 1 ] ? count += 1 : 0 ) : 0;
@@ -117,10 +117,13 @@ size_t Life::looking_neighbors( size_t x, size_t y ) const
 
 /// Retorna o índice de uma célula na lista a partir de suas coordenadas.
 size_t Life::cell_at( size_t x, size_t y ) const
-{
+{   
+    size_t idx;
     for ( size_t i = 0 ; i < list.size(); ++i )
         if ( list[ i ].exists( x , y ) )
-            return i;
+            idx = i;
+
+    return idx;
 }
 
 /// Aplica as regras de mudança da configuração.
