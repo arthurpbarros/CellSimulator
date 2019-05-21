@@ -1,8 +1,7 @@
 #ifndef CELL_H
 #define CELL_H
-#include <iostream>
+
 #include <ostream>
-#include <vector>
 
 class Cell {
 private:
@@ -10,7 +9,7 @@ private:
     bool alive; //!< Estado da célula.
 public:
     /// Default Constructor
-    Cell( size_t x_, size_t y_, bool live = true ) : x{ x_ }, y{ y_ }, alive{ live }
+    Cell( size_t x, size_t y, bool live = true ) : x{ x }, y{ y }, alive{ live }
     {/* empty */}
 
     /// Add info
@@ -21,17 +20,13 @@ public:
     bool getStatus( void ) const { return alive; }
     /// Add info
     void setStatus( bool st ) { alive = st; }
-    /// Útil para depuração
+    /// Add info
+    bool exists( size_t x, size_t y ) const { return ( Cell::x == x && Cell::y == y ); }
+    /// Add info
     friend std::ostream& operator<<( std::ostream& os, const Cell& c )
     {
-        os << "(" << c.getX() << "," << c.getY() << ") = " << ( c.getStatus() ? "alive" : "dead" );
+        os << '(' << c.getX() << ',' << c.getY() << ')';
         return os;
-    }
-    bool operator==(Cell &c){
-        return (x == c.x && y == c.y && alive == c.alive);
-    }
-    bool exists(size_t _x,size_t _y){
-        return (x == _x && y == _y);
     }
 };
 #endif
