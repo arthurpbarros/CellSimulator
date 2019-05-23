@@ -105,12 +105,13 @@
     size_t maxgen = 0;
     size_t fps = 0;
     size_t blocksize = 5;
-    std::string input_dir = "";
+    std::string input_dir;
     Color bkgcolor{GREEN};
     Color alivecolor{RED};
-    std::string outfile = "outfile.txt";
+    std::string outfile;
     bool valid = false;
   };
+  Params p;
 //Converte elemento do argv, de tamanho t para String.
 std::string convert (char * str, size_t t){
 	std::stringstream s;
@@ -120,14 +121,14 @@ std::string convert (char * str, size_t t){
 	}
 	return s.str();
 }
-Params p;
+
 void valid_arguments(size_t argc, char ** argv){
 	std::string aux;
 	std::string flags[] = {"--h","--help","--fps","--imgdir","--maxgen","--outfile","--alivecolor","--bkgcolor","--blocksize"};
 	std::string colors[] = {"BLACK", "BLUE", "CRIMSON", "DARK_GREEN", "DEEP_SKY_BLUE", "DODGER_BLUE","GREEN",
 	 "LIGHT_BLUE", "LIGHT_GREY", "LIGHT_YELLOW", "RED", "STEEL_BLUE","WHITE","YELLOW"};
 	std::vector<size_t> atr_valids; //Conta quantas flags e argumentos validos foram verificados
-	//Params p;
+	//Params p;	
 	if(argc >= 2){
 		size_t args;
 		for(args = 1; args < argc;args++){
@@ -137,7 +138,7 @@ void valid_arguments(size_t argc, char ** argv){
 					//Se a flag de ajuda foi solicitava, for a única flag e a primeira
 					if((flag.compare("--h") == 0 || flag.compare("--help") == 0) && args == 1 && argc == 2){ 
 						p.help = true;
-						// std::cout << "--help ativa\n"; 
+						std::cout << "--help ativa\n"; 
 					//Verifica se existe um argumento depois
 					}else if(flag.compare("--fps") == 0 && args+1 < argc){
 						//Capta o próximo argumento e verifica se é numero 
@@ -146,7 +147,7 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0){
 								p.fps = a;
-								// std::cout << "--fps ativa\n";
+								std::cout << "--fps ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							}
 						}catch(std::exception const & e){}
@@ -158,7 +159,7 @@ void valid_arguments(size_t argc, char ** argv){
 						dir = opendir(aux.c_str());
 						if(dir){
 							p.imgdir = aux;
-							// std::cout << "--imgdir ativa\n";
+							std::cout << "--imgdir ativa\n";
 							atr_valids.push_back(args); atr_valids.push_back(args+1); 
 						}
 						//Read of https://www.techiedelight.com/convert-char-to-string-cpp/
@@ -168,7 +169,7 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0) {
 								p.maxgen = a;
-								// std::cout << "--maxgen ativa\n";
+								std::cout << "--maxgen ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							} 
 						}catch(std::exception const & e){}
@@ -177,10 +178,15 @@ void valid_arguments(size_t argc, char ** argv){
 						std::ifstream ifs;
 						ifs.open(aux);
 						if(ifs.is_open()){
-							p.outfile = aux;
-							// std::cout << "--outfile ativa\n";
+							std::cout << aux << " outfile\n";
 							atr_valids.push_back(args); atr_valids.push_back(args+1); 
+						}else{
+							std::ofstream ofs;
+							ofs.open(aux,std::ofstream::out);
+							ofs.close();
 						}
+						p.outfile = aux;
+						std::cout << "--outfile ativa\n";
 						ifs.close();
 					}else if(flag.compare("--blocksize") == 0 && args+1 < argc){
 						aux = convert(argv[args+1],strlen(*(argv+args+1))/sizeof(char));
@@ -188,7 +194,7 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0){
 								p.blocksize = a;
-								// std::cout << "--blocksize ativa\n";
+								std::cout << "--blocksize ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							} 
 						}catch(std::exception const & e){}
@@ -197,7 +203,7 @@ void valid_arguments(size_t argc, char ** argv){
 						for(std::string color: colors){
 							if(aux.compare(color) == 0){
 								p.alivecolor = get_Color(color);
-								// std::cout << "--alivecolor ativa\n" << color << "\n";
+								std::cout << "--alivecolor ativa\n" << color << "\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1); 
 							}
 						}
@@ -206,7 +212,7 @@ void valid_arguments(size_t argc, char ** argv){
 						for(std::string color: colors){
 							if(aux.compare(color) == 0){
 								p.bkgcolor = get_Color(color);
-								// std::cout << "--bkgcolor ativa\n" << color << "\n";
+								std::cout << "--bkgcolor ativa\n" << color << "\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1); 
 							}
 						}
@@ -214,6 +220,8 @@ void valid_arguments(size_t argc, char ** argv){
 				}
 			}
 		}
+
+
 		size_t i,j;
 		bool existe;
 		for(i = 1; i < argc; i++){
@@ -253,9 +261,9 @@ Color get_bkgColor(void){return p.bkgcolor; }
 
 Color get_aliveColor(void){return p.alivecolor;}
 
-std::string outfile(void){return p.outfile;}
+std::string get_outfile(void){return p.outfile;}
 
 bool is_valid(void){return p.valid;}
 
-
+std::string get_imgdir(void){ return p.imgdir; }
 #endif
