@@ -1,1 +1,1 @@
-g++ -Wall -std=c++11 test.cpp -o exe
+g++ -Wall -std=c++11 main.cpp -o exe

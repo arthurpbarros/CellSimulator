@@ -1,26 +1,28 @@
-#include <iostream>
-#include <cstdlib>
+#include <iostream>    // std::cout
+#include <functional>  // std::function
+#include <sstream>     // std::ostringstream
+#include <cstdlib>     // std::system
 
-// LIFE CLASS AREA
-//===================================================================================
-#include <functional> // std::function
-#include <sstream>    // std::ostringstream
-#include "life.h"
+#include "include/valid.h"
+#include "include/stream.h"
+#include "include/life.h"
+#include "include/initial.h"
 
 /// Constructor
-Life::Life( size_t lin, size_t col, const std::vector< Cell >& other )
-    : nLin{ lin }, nCol{ col }, list{ other }
+Life::Life( input&& i )
+    : nLin{ i.h }, nCol{ i.w }, list{ i.alives }, born{ i.born }, s1{ i.s1 }, s2{ i.s2 }
 {
     grade = new unsigned short*[ nLin ];
 
     for ( size_t i = 0; i < nLin; ++i )
         grade[ i ] = new unsigned short[ nCol ]{ 0 };
 
-    born = 3;   // Atualmente Default
-    s1 = 2;     // Atualmente Default
-    s2 = 3;     // Atualmente Default
+    maxgen = get_maxgen();
+    blocksize = get_blocksize();
+    frame_rate = get_fps();
+    cell_color = get_aliveColor();
+    bckg_color = get_bkgColor();    
 
-    add_config();
     load();
 }
 
@@ -42,55 +44,81 @@ void Life::load( void )
 
 /// Retorna `true` se a configuração tornou-se extinta, `false` caso contrário.
 bool Life::extinct( void ) const
-{
-    if ( list.size() == 0 )
-    {
-        std::cout << "Configuração " << ( log.size() ) << " tornou-se extinta.\n";
-        return true;
-    }
-    
-    return false;
-}
+{ return ( list.size() == 0 ? true : false ); }
 
 /// Retorna `true` se a configuração tornou-se estável, `false` caso contrário.
-bool Life::stable( void ) const
+bool Life::stable( size_t* count ) const
 {
     std::ostringstream oss;
 
     for ( const Cell& c : list )
         oss << c << ' ';
 
-    size_t count = 1;
+    *count = 1;
 
     for ( const auto& s : log )
     {
         if ( s == oss.str() )
-        {   
-            std::cout << "Configuração " << ( log.size() + 1 )
-                    << " tornou-se estável.\nN = " << count << '\n';
             return true;
-        }
 
-        ++count;
+        ++( *count );
     } // end for
-        
+    
     return false;
 }
 
-/// Útil para depuração
+/// Retorna `true` nos seguintes casos:
+/**
+ * <ul>
+ *  <li> Alcançado o número máximo de gerações;
+ *  <li> Configuração tornou-se estável;
+ *  <li> Configuração tornou-se extinta.
+ * </ul>
+ */
+bool Life::conclude( void ) const
+{
+    static size_t generations = 0;
+    size_t aux;
+    bool flag;
+    
+    if ( ( flag = extinct() ) )
+        std::cout << "\nConfiguração " << ( log.size() ) << " tornou-se extinta.\n";
+    else if ( ( flag = stable( &aux ) ) )
+        std::cout << "\nConfiguração " << ( log.size() + 1 )
+            << " tornou-se estável. N = " << aux << ".\n";
+    else if ( !is_maxgen()  && ( flag = ( generations >= maxgen ? true : false ) ) )
+        std::cout << "\nAtingido o número máximo de gerações.\n";
+
+    ++generations;
+
+    return flag;    
+}
+
+/// Imprime a configuração atual
 void Life::print( void ) const
 {
+    static size_t count = 1;
+    static size_t frames = 1;
+
+    std::cout << "Generation " << count++ << ":\n";
+
     for ( size_t i = 0; i < nLin; ++i )
     {
-        std::cout << '[';
+        std::cout << "[ ";
 
         for ( size_t j = 0; j < nCol; ++j )
-            std::cout << ' ' << ( grade[ i ][ j ] ? '*' : ' ' );
+            std::cout << ( grade[ i ][ j ] ? '*' : ' ' );
 
         std::cout << " ]\n";
     } // end outer for
 
-    std::system( "sleep 1");
+    if ( frames == frame_rate )
+    {
+        frames = 1;
+        std::system( "sleep 1");
+    }
+    else
+        ++frames;
 }
 
 /// Retorna a quantidade de células vizinhas vivas.
@@ -127,9 +155,12 @@ size_t Life::cell_at( size_t x, size_t y ) const
 }
 
 /// Aplica as regras de mudança da configuração.
-void Life::apply_rules( void )
+void Life::update( void )
 {
-    // Passo 1: Aplicar as regras de nascimento e sobrevivência.
+    // Passo 1: Adicionar configuração anterior ao log de gerações.
+    add_config();
+
+    // Passo 2: Aplicar as regras de nascimento e sobrevivência.
     for ( size_t i = 0 ; i < nLin ; ++i )
     {
         for (size_t j = 0 ; j < nCol ; ++j )
@@ -144,7 +175,7 @@ void Life::apply_rules( void )
         } // end inner for
     } // end outer for
 
-    // Passo 2: Remover células mortas da configuração.
+    // Passo 3: Remover células mortas da configuração.
     for ( auto it = list.begin(); it != list.end(); )
     {
         if ( !it->getStatus() )
@@ -158,7 +189,7 @@ void Life::apply_rules( void )
 
     list.shrink_to_fit();
 
-    // Passo 3: Carregar nova configuração para a matriz.
+    // Passo 4: Carregar nova configuração para a matriz.
     load();
 }
 
@@ -173,7 +204,7 @@ void Life::add_config( void )
     log.push_back( oss.str() );
 }
 
-/// Útil para depuração; Imprime todos os registros de gerações.
+/// Imprime todos os registros de gerações.
 void Life::show_log( void ) const
 {
     std::cout << "\n>>> Log de gerações:\n====================\n";
@@ -181,42 +212,25 @@ void Life::show_log( void ) const
     for ( const auto& s : log )
         std::cout << s << '\n';
 }
-//===================================================================================
 
-
-int main( void )
+int main( int argc, char** argv )
 {
-    // Simulação de baixo nível: Recebendo dados do arquivo de configuração.
-    // Ao cerregar os dados de entrada, a lista de células deve ser inicializada
-    // com as informações de todas as células vivas. Como por exemplo, o vector v
-    // foi inicializado a partir da seguinte configuração:
-    // ..........
-    // ..**.....*
-    // .........*
-    // ....***..*
-    // ....***...
-    // ..........
-    // ..........
-    // ..........
-    // ..........
-    // ..........
-    const std::vector<Cell> v{ Cell(0,0), Cell(0,1), Cell(0,2), Cell(1,1) };
+    valid_arguments( argc, argv );
+    
 
-    Life gen( 10, 10, v );
-
-    // TODO: Game loop
-    gen.print(); std::cout << '\n';
-
-    while ( true )
+    if ( is_valid() )
     {
-        gen.apply_rules();
-        gen.print(); std::cout << '\n';
-        if ( gen.stable() ) break;
-        if ( gen.extinct() ) break;
-        gen.add_config();
+        std::string input_file = get_input_dir();
+        print_initial_msg();
+
+        Life gen( readFile( input_file ) );
+
+        while ( not gen.conclude() )
+        {
+            gen.print();
+            gen.update();
+        }
     }
-
-    gen.show_log();
-
+    
     return 0;
 } // end main

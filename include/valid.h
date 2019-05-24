@@ -113,6 +113,8 @@
 bool get_help(void){ return p.help;}
 ///Retorna o valor de maxgen, se for 0, a simulação só terminará se chegar a estabilidade ou extinção.
 size_t get_maxgen(void){ return p.maxgen;}
+///Retorna true se maxgen não foi definido.
+bool is_maxgen(void){return (p.maxgen == 0);}
 ///Retorna o valor de fps, se for 0, a simulação segue o ritmo da execução.
 size_t get_fps(void){ return p.fps;}
 ///Retorna o valor do bloco de uma célula, o padrão é 5.
