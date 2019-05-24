@@ -14,34 +14,36 @@
    struct Color
    {
        //=== Alias
-       typedef unsigned char color_t; //!< Type of a color channel.
-       /// Identifies each color channel.
-       enum channel_e : color_t { R=0, //!< Red channel.
-                                  G=1, //!< Green channel.
-                                  B=2 //!< Blue channel
-       };
-
+       typedef size_t color_t; //!< Type of a color channel.
        //=== Members
-       color_t channels[3]; //!< Stores each of the color channels, R, G, and B.
+       color_t channel[3]; //!< Stores each of the color channels, R, G, and B.
        //=== Methods
        /// Creates a color.
-       Color( color_t r=0, color_t g=0, color_t b=0 ) : channels{r,g,b} {/*empty*/}
+       Color(color_t r=0, color_t g=0, color_t b=0 ) : channel{r,g,b} {}
        /// Copy constructor.
-       Color( const Color& clone )
-       {
-           std::memcpy( channels, clone.channels, sizeof(color_t)*3 );
+       Color( const Color& clone ){
+           size_t i;
+           for(i = 0; i < 3;i++){
+           		channel[i] = clone.channel[i];
+           }
        }
        /// Assignment operator.
-       Color& operator=( const Color& rhs )
-       {
-           if ( &rhs != this )
-               std::memcpy( channels, rhs.channels, sizeof(color_t)*3 );
+       Color& operator=( const Color& c){
+           if ( &c != this ){
+               size_t i;
+		       for(i = 0; i < 3;i++){
+		       		channel[i] = c.channel[i];
+		       } 
+		   }
            return *this;
        }
-       /// Comparison operator.
-       bool operator==( const Color& rhs )
-       {
-           return not std::memcmp( channels, rhs.channels, sizeof(color_t)*3 );
+       bool operator==(const Color& c){
+       		return (channel[0] == c.channel[0] && channel[1] == c.channel[1] && channel[2] == c.channel[2]);
+       }
+       std::string print() const{
+       		std::stringstream s;
+       		s << "(" << channel[0] << "," << channel[1] << "," << channel[2] << ")\n";
+       		return s.str();
        }
    };
 
@@ -96,7 +98,6 @@
       }else{
         return YELLOW;
       }
-
   }
   //Represent a list of parametres
   struct Params{
@@ -112,6 +113,46 @@
     bool valid = false;
   };
   Params p;
+//Gets, para visualizar paramêtros
+bool get_help(void){ return p.help;}
+
+size_t get_maxgen(void){ return p.maxgen;}
+
+size_t get_fps(void){ return p.fps;}
+
+size_t get_blocksize(void){ return p.blocksize;}
+
+std::string get_input_dir(void){ return p.input_dir;}
+
+Color get_bkgColor(void){return p.bkgcolor; }
+
+Color get_aliveColor(void){return p.alivecolor;}
+
+std::string get_outfile(void){return p.outfile;}
+
+bool is_valid(void){return p.valid;}
+
+std::string get_imgdir(void){ return p.imgdir; }
+//Imprime ajuda
+void print_help(){
+	std::stringstream s;
+	s << "Uso: glife [<opções>] <arquivo de entrada>\n";
+	s << "	Opções de simulação(Flags): \n";
+	s << "--help or --h        -> Print this help text\n";
+	s << "--imgdir <path>      -> Specify directory where output images are written to.\n";
+	s << "--maxgen <num>       -> Maximum number of generations to simulate.\n";
+	s << "--fps <num>          -> Number of generations presented per second.\n";
+	s << "--blocksize <num>    -> Pixel size of a cell. Default = 5.\n"; 
+	s << "--bkgcolor <color>   -> Color name for the background. Default GREEN\n";
+	s << "--alivecolor <color> -> Color name for representing alive cells. Default RED\n";
+	s << "--outfile <filename> -> Write the text representation of the simulation to the given filename.\n"; 
+	s << "\n";
+	s << "Available colors are: \n";
+	s << "BLACK BLUE CRIMSON DARK_GREEN DEEP_SKY_BLUE\n"; 
+	s << "DODGER_BLUE GREEN LIGHT_BLUE LIGHT_GREY\n"; 
+	s << "LIGHT_YELLOW RED STEEL_BLUE WHITE YELLOW \n";
+	std::cout << s.str() << "\n";
+}
 //Converte elemento do argv, de tamanho t para String.
 std::string convert (char * str, size_t t){
 	std::stringstream s;
@@ -138,7 +179,8 @@ void valid_arguments(size_t argc, char ** argv){
 					//Se a flag de ajuda foi solicitava, for a única flag e a primeira
 					if((flag.compare("--h") == 0 || flag.compare("--help") == 0) && args == 1 && argc == 2){ 
 						p.help = true;
-						std::cout << "--help ativa\n"; 
+						print_help();
+						// std::cout << "--help ativa\n"; 
 					//Verifica se existe um argumento depois
 					}else if(flag.compare("--fps") == 0 && args+1 < argc){
 						//Capta o próximo argumento e verifica se é numero 
@@ -147,19 +189,18 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0){
 								p.fps = a;
-								std::cout << "--fps ativa\n";
+								// std::cout << "--fps ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							}
 						}catch(std::exception const & e){}
 						//Read in https://stackoverflow.com/questions/13470822/c-error-while-using-atoi
-					//Verifica se existe um argumento depois
 					}else if(flag.compare("--imgdir") == 0 && args+1 < argc){
 						aux = convert(argv[args+1],strlen(*(argv+args+1))/sizeof(char));
 						DIR * dir;
 						dir = opendir(aux.c_str());
 						if(dir){
 							p.imgdir = aux;
-							std::cout << "--imgdir ativa\n";
+							// std::cout << "--imgdir ativa\n";
 							atr_valids.push_back(args); atr_valids.push_back(args+1); 
 						}
 						//Read of https://www.techiedelight.com/convert-char-to-string-cpp/
@@ -169,7 +210,7 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0) {
 								p.maxgen = a;
-								std::cout << "--maxgen ativa\n";
+								// std::cout << "--maxgen ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							} 
 						}catch(std::exception const & e){}
@@ -178,7 +219,7 @@ void valid_arguments(size_t argc, char ** argv){
 						std::ifstream ifs;
 						ifs.open(aux);
 						if(ifs.is_open()){
-							std::cout << aux << " outfile\n";
+							// std::cout << aux << " outfile\n";
 							atr_valids.push_back(args); atr_valids.push_back(args+1); 
 						}else{
 							std::ofstream ofs;
@@ -186,7 +227,7 @@ void valid_arguments(size_t argc, char ** argv){
 							ofs.close();
 						}
 						p.outfile = aux;
-						std::cout << "--outfile ativa\n";
+						// std::cout << "--outfile ativa\n";
 						ifs.close();
 					}else if(flag.compare("--blocksize") == 0 && args+1 < argc){
 						aux = convert(argv[args+1],strlen(*(argv+args+1))/sizeof(char));
@@ -194,7 +235,7 @@ void valid_arguments(size_t argc, char ** argv){
 							int a = std::stoi(aux);
 							if(a > 0){
 								p.blocksize = a;
-								std::cout << "--blocksize ativa\n";
+								// std::cout << "--blocksize ativa\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1);
 							} 
 						}catch(std::exception const & e){}
@@ -203,7 +244,7 @@ void valid_arguments(size_t argc, char ** argv){
 						for(std::string color: colors){
 							if(aux.compare(color) == 0){
 								p.alivecolor = get_Color(color);
-								std::cout << "--alivecolor ativa\n" << color << "\n";
+								// std::cout << "--alivecolor ativa\n" << color << "\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1); 
 							}
 						}
@@ -212,7 +253,7 @@ void valid_arguments(size_t argc, char ** argv){
 						for(std::string color: colors){
 							if(aux.compare(color) == 0){
 								p.bkgcolor = get_Color(color);
-								std::cout << "--bkgcolor ativa\n" << color << "\n";
+								// std::cout << "--bkgcolor ativa\n" << color << "\n";
 								atr_valids.push_back(args); atr_valids.push_back(args+1); 
 							}
 						}
@@ -236,7 +277,7 @@ void valid_arguments(size_t argc, char ** argv){
 					ifs.open(aux);
 					if(ifs.is_open()){
 						p.input_dir = aux;
-						std::cout << "--arquivo de entrada ativo\n";
+						// std::cout << "--arquivo de entrada ativo\n";
 						p.valid = true;
 					}
 					ifs.close();
@@ -246,24 +287,4 @@ void valid_arguments(size_t argc, char ** argv){
 		}
 	}
 }
-
-bool get_help(void){ return p.help;}
-
-size_t get_maxgen(void){ return p.maxgen;}
-
-size_t get_fps(void){ return p.fps;}
-
-size_t get_blocksize(void){ return p.blocksize;}
-
-std::string get_input_dir(void){ return p.input_dir;}
-
-Color get_bkgColor(void){return p.bkgcolor; }
-
-Color get_aliveColor(void){return p.alivecolor;}
-
-std::string get_outfile(void){return p.outfile;}
-
-bool is_valid(void){return p.valid;}
-
-std::string get_imgdir(void){ return p.imgdir; }
 #endif
