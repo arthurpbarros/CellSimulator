@@ -1,8 +1,6 @@
 #ifndef VALID
 #define VALID
-#include <cstring> // memset, memcpy
-#include <iostream>
-#include <iostream>
+#include <iostream> //std:cout 
 #include <string.h> //strlen
 #include <string> //std::string,compare
 #include <sstream> //std::stringstream
@@ -10,7 +8,7 @@
 #include <dirent.h> //opendir
 #include <vector> //std::vector
 
-   /// Represents a Color as a RGB entity.
+   /// Representa uma Cor com 3 canais (RGB).
    struct Color
    {
        //=== Alias
@@ -27,7 +25,7 @@
            		channel[i] = clone.channel[i];
            }
        }
-       /// Assignment operator.
+       /// Operador de assignatura.
        Color& operator=( const Color& c){
            if ( &c != this ){
                size_t i;
@@ -37,9 +35,11 @@
 		   }
            return *this;
        }
+       /// Retorna true, se o parametros tem os respectivos canais iguais
        bool operator==(const Color& c){
        		return (channel[0] == c.channel[0] && channel[1] == c.channel[1] && channel[2] == c.channel[2]);
        }
+       /// Imprime dados da cor
        std::string print() const{
        		std::stringstream s;
        		s << "(" << channel[0] << "," << channel[1] << "," << channel[2] << ")\n";
@@ -47,12 +47,7 @@
        }
    };
 
-   /*
-   std::map< std::string, Color > color_pallet;
-   color_pallet.insert( std::make_pair( "BLACK", Color{0,0,0} ) );
-   */
-
-   // A basic color pallete.
+   // Paleta de cores.
    static const Color BLACK         = Color{0,0,0}      ; //!< Black.
    static const Color BLUE          = Color{0,0,255}    ; //!< Blue.
    static const Color WHITE         = Color{255,255,255}; //!< White.
@@ -67,7 +62,7 @@
    static const Color STEEL_BLUE    = Color{70,130,180} ; //!< Yet another bluish color.
    static const Color YELLOW        = Color{255,255,0}  ; //!< Yellow.
    static const Color LIGHT_YELLOW  = Color{255,255,153}; //!< Light yellow.
-
+  // Retorna uma cor correspondente ao nome passado por parametro
   Color get_Color(std::string color){
       if(color.compare("BLACK") == 0){
         return BLACK;
@@ -99,45 +94,46 @@
         return YELLOW;
       }
   }
-  //Represent a list of parametres
+  //Representa uma lista de parâmetros
   struct Params{
-    bool help = false;
-    std::string imgdir = "img";
-    size_t maxgen = 0;
-    size_t fps = 0;
-    size_t blocksize = 5;
-    std::string input_dir;
-    Color bkgcolor{GREEN};
-    Color alivecolor{RED};
-    std::string outfile;
-    bool valid = false;
+    bool help = false; //!< Sinaliza se a opção help foi solicitada
+    std::string imgdir = "img"; //!< Caminho para geração de imagens
+    size_t maxgen = 0; //!< Número de geração máxima
+    size_t fps = 0; //!< Quantas gerações serão impressas por segundo
+    size_t blocksize = 5; //!< Tamanho do bloco de células
+    std::string input_dir; //!< Arquivo com geração inicial
+    Color bkgcolor{GREEN}; //!< Cor de fundo, padrão: GREEN
+    Color alivecolor{RED}; //!< Cor da célula, padrão: RED
+    std::string outfile; //!< Caminho do arquivo de saida
+    bool valid = false; //!< Sinaliza se o usuário passou o arquivo de entrada
   };
   Params p;
-//Gets, para visualizar paramêtros
+
+///Retorna true, se o usuário solicitou a opção ajuda.
 bool get_help(void){ return p.help;}
-
+///Retorna o valor de maxgen, se for 0, a simulação só terminará se chegar a estabilidade ou extinção.
 size_t get_maxgen(void){ return p.maxgen;}
-
+///Retorna o valor de fps, se for 0, a simulação segue o ritmo da execução.
 size_t get_fps(void){ return p.fps;}
-
+///Retorna o valor do bloco de uma célula, o padrão é 5.
 size_t get_blocksize(void){ return p.blocksize;}
-
+/// Retorna o caminho da entrada dos dados, não há um padrão.
 std::string get_input_dir(void){ return p.input_dir;}
-
+/// Retorna a cor de fundo.
 Color get_bkgColor(void){return p.bkgcolor; }
-
+/// Retorna a cor que representa uma célula.
 Color get_aliveColor(void){return p.alivecolor;}
-
+/// Retorna o caminho do arquivo que receberá as configurações.
 std::string get_outfile(void){return p.outfile;}
-
+/// Retorna true caso o usuário passou um caminho de entrada válido.
 bool is_valid(void){return p.valid;}
-
+/// Retorna o caminho que será usado para guardar as imagens de configurações.
 std::string get_imgdir(void){ return p.imgdir; }
-//Imprime ajuda
+/// Imprime o texto de ajude, caso o usuário solicite a flag corretamente
 void print_help(){
 	std::stringstream s;
-	s << "Uso: glife [<opções>] <arquivo de entrada>\n";
-	s << "	Opções de simulação(Flags): \n";
+	s << "Use: glife [<options>] <input_file>\n";
+	s << "Simulation options: \n";
 	s << "--help or --h        -> Print this help text\n";
 	s << "--imgdir <path>      -> Specify directory where output images are written to.\n";
 	s << "--maxgen <num>       -> Maximum number of generations to simulate.\n";
@@ -148,12 +144,12 @@ void print_help(){
 	s << "--outfile <filename> -> Write the text representation of the simulation to the given filename.\n"; 
 	s << "\n";
 	s << "Available colors are: \n";
-	s << "BLACK BLUE CRIMSON DARK_GREEN DEEP_SKY_BLUE\n"; 
-	s << "DODGER_BLUE GREEN LIGHT_BLUE LIGHT_GREY\n"; 
-	s << "LIGHT_YELLOW RED STEEL_BLUE WHITE YELLOW \n";
+	s << " BLACK BLUE CRIMSON DARK_GREEN DEEP_SKY_BLUE\n"; 
+	s << " DODGER_BLUE GREEN LIGHT_BLUE LIGHT_GREY\n"; 
+	s << " LIGHT_YELLOW RED STEEL_BLUE WHITE YELLOW \n";
 	std::cout << s.str() << "\n";
 }
-//Converte elemento do argv, de tamanho t para String.
+///Converte elemento do argv com tamanho t para String.
 std::string convert (char * str, size_t t){
 	std::stringstream s;
 	size_t i;
@@ -162,7 +158,7 @@ std::string convert (char * str, size_t t){
 	}
 	return s.str();
 }
-
+///Valida consistência do argumentos passados por linha de comando
 void valid_arguments(size_t argc, char ** argv){
 	std::string aux;
 	std::string flags[] = {"--h","--help","--fps","--imgdir","--maxgen","--outfile","--alivecolor","--bkgcolor","--blocksize"};
