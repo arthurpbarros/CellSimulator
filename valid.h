@@ -271,10 +271,14 @@ void valid_arguments(size_t argc, char ** argv){
 				if((aux.substr(0,2)).compare("--") != 0){
 					std::ifstream ifs;
 					ifs.open(aux);
+					std::cout << ">>>Trying to open input file" << aux;
 					if(ifs.is_open()){
+						std::cout << "done\n";
 						p.input_dir = aux;
 						// std::cout << "--arquivo de entrada ativo\n";
 						p.valid = true;
+					}else{
+						std::cout << "fail!\n";
 					}
 					ifs.close();
 					i = argc; //End Loops

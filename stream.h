@@ -14,6 +14,7 @@ struct input
 };
 ///Retorna struct com informações da geração inicial
 input readFile(const std::string file){
+
 	input inp;
 	std::ifstream ifs (file,std::ifstream::in);
 	if(!ifs.is_open()){
@@ -26,6 +27,8 @@ input readFile(const std::string file){
 	std::string aux;
 	
 	ifs >> x >> y >> born >> s1 >> s2 >> c_alive;
+	std::cout << ">>> Grid size read from input file: " << x << " rows by " << y << " cols.\n";
+	std::cout << ">>> Character that represents a living cell read from input file: ’" << c_alive << "’\n";
 	inp.h = x; inp.w = y;
 	inp.born = born; inp.s1 = s1; inp.s2 = s2;
 	std::getline(ifs,aux);
@@ -41,6 +44,7 @@ input readFile(const std::string file){
 		}
 		line++;
 	}
+	std::cout << ">>> Finished reading input data file.\n";
 	return inp;
 }
 #endif
