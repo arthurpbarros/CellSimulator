@@ -31,7 +31,7 @@ Onde:
 * b: número de células necessárias para uma célula morta tornar-se viva
 * s1: número de 
 * s2: número de
-* c: caracter que representa a célula viva na matriz, por exemplo o '$'. As células com qualquer outro caracter são consideradas * mortas. OBS: Não é preciso indicar todas as mortas.
+* c: caracter que representa a célula viva na matriz, por exemplo o '$'. As células com qualquer outro caracter são consideradas mortas. OBS: Não é preciso indicar todas as mortas.
 
 ## Limitações
 <p>O programa possui uma classe main pouco modularizada, isto é, possui muitos métodos.</p>
